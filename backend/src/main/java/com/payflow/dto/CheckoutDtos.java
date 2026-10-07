@@ -1,5 +1,6 @@
 package com.payflow.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -13,7 +14,7 @@ public class CheckoutDtos {
   ) {}
 
   public record CheckoutRequest(
-      @NotEmpty List<CartItem> items
+      @NotEmpty List<@NotNull @Valid CartItem> items
   ) {}
 
   public record CheckoutResponse(

@@ -5,18 +5,26 @@ export function getToken(): string | null {
 }
 
 export async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers = new Headers(opts.headers);
+  if (!headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   const token = getToken();
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const res = await fetch(`${API_BASE}${path}`, {
     ...opts,
-    headers: { ...headers, ...(opts.headers as any) },
+    headers,
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(text || `Request failed: ${res.status}`);
+    let message = text || `Request failed: ${res.status}`;
+    try {
+      const error = JSON.parse(text);
+      if (typeof error.message === "string") message = error.message;
+    } catch {
+      // Non-JSON errors can come from proxies or the security filters.
+    }
+    throw new Error(message);
   }
 
   return res.json() as Promise<T>;

@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react";
 import ProductCard from "../components/ProductCard";
 import { loadCart, saveCart } from "../store/cart";
+import { api } from "../api/client";
 
-const API = import.meta.env.VITE_API_BASE_URL;
+type Product = { id: number; name: string; description: string; priceCents: number };
 
 export default function Products() {
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`${API}/api/products`)
-      .then(res => res.json())
-      .then(setProducts);
+    api<Product[]>("/api/products")
+      .then(setProducts)
+      .catch(err => setError(err instanceof Error ? err.message : "Unable to load products"));
   }, []);
 
-  function addToCart(p: any) {
+  function addToCart(p: Product) {
     const cart = loadCart();
     const item = cart.find(i => i.productId === p.id);
     if (item) item.quantity++;
@@ -24,6 +26,7 @@ export default function Products() {
 
   return (
     <div style={{ padding: 16, display: "grid", gap: 16 }}>
+      {error && <p role="alert">{error}</p>}
       {products.map(p => (
         <ProductCard key={p.id} product={p} onAdd={() => addToCart(p)} />
       ))}

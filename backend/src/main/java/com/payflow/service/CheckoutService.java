@@ -43,7 +43,7 @@ public class CheckoutService {
     this.stripeService = stripeService;
   }
 
-  @Transactional
+  @Transactional(rollbackOn = Exception.class)
   public CheckoutDtos.CheckoutResponse createCheckout(String email, CheckoutDtos.CheckoutRequest req) throws Exception {
     User user = userRepository.findByEmail(email).orElseThrow();
 

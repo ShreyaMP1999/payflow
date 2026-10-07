@@ -3,7 +3,7 @@ import ProductCard from "../components/ProductCard";
 import { loadCart, saveCart } from "../store/cart";
 import { api } from "../api/client";
 
-type Product = { id: number; name: string; description: string; priceCents: number };
+type Product = { id: number; name: string; description: string; priceCents: number; stock: number };
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -18,6 +18,11 @@ export default function Products() {
   function addToCart(p: Product) {
     const cart = loadCart();
     const item = cart.find(i => i.productId === p.id);
+    if ((item?.quantity ?? 0) >= p.stock) {
+      setError(`No more stock available for ${p.name}`);
+      return;
+    }
+    setError("");
     if (item) item.quantity++;
     else cart.push({ productId: p.id, name: p.name, priceCents: p.priceCents, quantity: 1 });
     saveCart(cart);

@@ -4,6 +4,7 @@ type Props = {
       name: string;
       description: string;
       priceCents: number;
+      stock: number;
     };
     onAdd: () => void;
   };
@@ -14,7 +15,9 @@ type Props = {
         <h3>{product.name}</h3>
         <p>{product.description}</p>
         <p>${(product.priceCents / 100).toFixed(2)}</p>
-        <button onClick={onAdd}>Add to Cart</button>
+        <button disabled={product.stock <= 0} onClick={onAdd}>
+          {product.stock <= 0 ? "Out of stock" : "Add to Cart"}
+        </button>
       </div>
     );
   }

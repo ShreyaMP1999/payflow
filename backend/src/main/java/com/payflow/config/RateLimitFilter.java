@@ -36,7 +36,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
       b.count++;
       if (b.count > limitPerMinute) {
         res.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        res.getWriter().write("Too many requests");
+        res.setHeader("Retry-After", Long.toString(Math.max(1, 60 - (now - b.windowStartEpochSec))));
+        res.setContentType("application/json");
+        res.getWriter().write("{\"code\":\"rate_limited\",\"message\":\"Too many requests\"}");
         return;
       }
     }

@@ -102,6 +102,26 @@ class PayflowApplicationTests {
   }
 
   @Test
+  void rejectsOverflowingLineAndCartTotalsWithoutReservingInventory() {
+    product.setPriceCents(Integer.MAX_VALUE);
+    products.save(product);
+    var requests = List.of(
+        new CheckoutDtos.CheckoutRequest(List.of(new CheckoutDtos.CartItem(product.getId(), 2))),
+        new CheckoutDtos.CheckoutRequest(List.of(
+            new CheckoutDtos.CartItem(product.getId(), 1),
+            new CheckoutDtos.CartItem(product.getId(), 1)))
+    );
+    for (var request : requests) {
+      assertThatThrownBy(() -> checkoutService.createCheckout(user.getEmail(), request))
+          .isInstanceOf(IllegalArgumentException.class)
+          .hasMessage("Order total exceeds the supported amount");
+      assertThat(products.findById(product.getId()).orElseThrow().getStock()).isEqualTo(5);
+      assertThat(reservations.count()).isZero();
+      assertThat(orders.count()).isZero();
+    }
+  }
+
+  @Test
   void rollsBackInventoryAndOrderWhenStripeThrowsCheckedException() throws Exception {
     when(stripe.createCheckoutSession(anyString(), anyList()))
         .thenThrow(new Exception("Payment provider unavailable"));

@@ -62,6 +62,12 @@ public class CheckoutService {
         throw new IllegalArgumentException("Insufficient stock for productId=" + p.getId());
       }
 
+      try {
+        total = Math.addExact(total, Math.multiplyExact(p.getPriceCents(), item.quantity()));
+      } catch (ArithmeticException e) {
+        throw new IllegalArgumentException("Order total exceeds the supported amount", e);
+      }
+
       // reserve: decrement stock inside the same tx
       p.setStock(p.getStock() - item.quantity());
 
@@ -72,8 +78,6 @@ public class CheckoutService {
       r.setStatus(InventoryReservation.Status.ACTIVE);
       r.setExpiresAt(Instant.now().plus(15, ChronoUnit.MINUTES));
       reservations.add(reservationRepository.save(r));
-
-      total += p.getPriceCents() * item.quantity();
 
       lineItems.add(
           SessionCreateParams.LineItem.builder()
